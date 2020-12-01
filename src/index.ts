@@ -1,30 +1,23 @@
-// fix ts feature: Cannot redeclare block-scoped variable 'Promise'
-// https://medium.com/@muravitskiy.mail/cannot-redeclare-block-scoped-variable-varname-how-to-fix-b1c3d9cc8206
-export {};
+import { extractImageUrls, src2tag, downloadPostImages, IConfig } from "./utils/post";
 const path = require("path");
 const fs = require("fs");
 const Promise = require("bluebird");
 const statSync = fs.statSync;
-const { extractImageUrls, src2tag, downloadPostImages } = require("./utils/post");
 
 const chalk = require("chalk");
 const red = chalk.bold.red;
 const green = chalk.bold.green;
 
-interface IConfig {
-    [propName: string]: any;
-}
-
 function mergeConfig(inputConfig: IConfig = {}) {
     let defaultConfig: IConfig = {};
-    const defaultConfigPath = path.resolve(__dirname, "../.poconfig.json");
+    const defaultConfigPath = path.resolve(__dirname, "../.hexo-include-image.json");
 
     try {
         defaultConfig = require(defaultConfigPath);
     } catch (err) {}
 
     const config = { ...defaultConfig, ...inputConfig };
-    config.postsDir = path.resolve(process.cwd(), config.postsDir || "_posts");
+    config.postsDir = path.resolve(process.cwd(), config.postsDir || "");
 
     if (statSync(config.postsDir).isFile()) {
         throw new Error(
@@ -48,7 +41,7 @@ const getMDPosts = (postsDir: string) => {
 };
 
 function include(config: IConfig) {
-    const { postsDir } = config;
+    const { postsDir, tagPluginsSyntax } = config;
     return getMDPosts(postsDir)
         .map((filename: string) => {
             const post = joinPostsDir(postsDir, filename);
@@ -56,9 +49,10 @@ function include(config: IConfig) {
         })
         .filter(([post, urls]: [string, RegExpMatchArray | null]) => !!urls)
         .each(([post, urls]: [string, RegExpMatchArray]) => {
-            const assetFolder = joinPostsDir(postsDir, path.parse(post).name);
+            const postName = path.parse(post).name;
+            const assetFolder = joinPostsDir(postsDir, postName);
             return downloadPostImages(urls, assetFolder)
-                .then((dones: string[]) => src2tag(post, dones))
+                .then((dones: string[]) => src2tag({post, dones, postName, tagPluginsSyntax}))
                 .catch((err: Error) => console.log(red(err)));
         });
 }

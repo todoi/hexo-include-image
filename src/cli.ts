@@ -10,5 +10,8 @@ program.version(pkg.version);
 program
     .description(`To download images and embed image with tag plugin syntax in markdown documents.`)
     .option("-P, --posts-dir <path>", "The directory of the hexo posts, required")
-    .action((options: any) => main(options))
+    .option("-T, --no-tag-plugins-syntax", "Use tag plugin syntax to embed image")
+    .action((options: any) => {
+        main(options)
+    })
     .parse(process.argv);

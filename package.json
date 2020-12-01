@@ -4,7 +4,7 @@
   "description": "",
   "main": "./built/cli.js",
   "bin": {
-    "hexo-include-image": "./built/cli.js"
+    "hii": "./built/cli.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

@@ -8,7 +8,11 @@ const getImgNameFromUrl = require("./getImgNameFromUrl");
 const download = require("./download");
 const chalk = require("chalk");
 
-module.exports.extractImageUrls = function (post: string): [string, RegExpMatchArray | null][] {
+export interface IConfig {
+    [propName: string]: any;
+}
+
+export function extractImageUrls(post: string): [string, RegExpMatchArray | null][] {
     const regexp = /(?<=\!\[.*?\]\()(https?:)?\/\/.+?(?=\))/g;
 
     return readFile(post, "utf8").then((data: string) => {
@@ -17,13 +21,15 @@ module.exports.extractImageUrls = function (post: string): [string, RegExpMatchA
     });
 };
 
-module.exports.src2tag = function (post: string, dones: string[]) {
+export function src2tag({ post, dones, postName, tagPluginsSyntax }: IConfig) {
     const regexp = /!\[(.*?)\]\(((https?:)?\/\/.+?)\)/g;
     function replace(data: string, regexp: RegExp) {
         return data.replace(regexp, (match: string, title: string, url: string) => {
-            return dones.includes(url)
-                ? `{% asset_img "${getImgNameFromUrl(url)}" "${title || "title"}'src-${url}'" %}`
-                : match;
+            if(dones.includes(url)) {
+                const imgName = getImgNameFromUrl(url);
+                return tagPluginsSyntax ? `{% asset_img "${imgName}" "${title || "title"}'src-${url}'" %}` : `![title](${postName}/${imgName})`
+            }
+            return match;
         });
     }
 
@@ -32,7 +38,7 @@ module.exports.src2tag = function (post: string, dones: string[]) {
         .then((data: string) => writeFile(post, data, "utf8"));
 };
 
-module.exports.downloadPostImages = function (urls: string[], assetFolder: string) {
+export function downloadPostImages(urls: string[], assetFolder: string) {
     const dones: string[] = [];
 
     fs.mkdirSync(assetFolder, { recursive: true });

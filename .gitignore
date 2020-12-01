@@ -1,3 +1,4 @@
 node_modules/
 .poconfig.json
+.hexo-include-image.json
 built/
